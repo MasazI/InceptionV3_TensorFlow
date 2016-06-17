@@ -12,6 +12,7 @@ tf.app.flags.DEFINE_string('train_dir', '/tmp/imagenet_train', "Directory where 
 tf.app.flags.DEFINE_integer('max_steps', 10000000, "Number of batches to run.")
 tf.app.flags.DEFINE_integer('num_threads', 4, "Number of threads")
 tf.app.flags.DEFINE_string('subset', 'train', "Either 'train' or 'validation'.")
+tf.app.flags.DEFINE_float('batchnorm_moving_average_decay', 0.9997, "decay rate of batchnorm.")
 
 # FLags train images settings
 tf.app.flags.DEFINE_integer('image_h_org', 64, "original image height")
