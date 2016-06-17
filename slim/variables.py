@@ -78,14 +78,13 @@ with tf.Session() as sess:
   ...
 
 """
-from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
 
 from tensorflow.core.framework import graph_pb2
-from inception.slim import scopes
+import scopes
 
 # Collection containing all the variables created using slim.variables
 MODEL_VARIABLES = '_model_variables_'
