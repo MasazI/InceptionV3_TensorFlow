@@ -7,10 +7,13 @@ inception_v3 is an implementation of inception v3 using tensorflow according to 
 ## How to use ##
 - create datalist in data directory.
 - datalist  
+
+```
 <image path>,<label number>  
 ...
+```
 
-
+- train
 ```
 python trainer.py
 ```
