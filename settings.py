@@ -9,10 +9,13 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('batch_size', 30, 'the number of images in a batch.')
 flags.DEFINE_string('tfcsv', 'data/train_csv.txt', 'path to tf csv file for training.')
 tf.app.flags.DEFINE_string('train_dir', '/tmp/imagenet_train', "Directory where to write event logs and checkpoint")
+tf.app.flags.DEFINE_integer('num_classes', 101, "Number of classes")
 tf.app.flags.DEFINE_integer('max_steps', 10000000, "Number of batches to run.")
 tf.app.flags.DEFINE_integer('num_threads', 4, "Number of threads")
 tf.app.flags.DEFINE_string('subset', 'train', "Either 'train' or 'validation'.")
 tf.app.flags.DEFINE_float('batchnorm_moving_average_decay', 0.9997, "decay rate of batchnorm.")
+tf.app.flags.DEFINE_float('moving_average_decay', 0.9999, "decay rate of movieng average.")
+tf.app.flags.DEFINE_integer('num_examples_per_epoch_for_train', 500, "the number of examples per epoch train.")
 
 # FLags train images settings
 tf.app.flags.DEFINE_integer('image_h_org', 64, "original image height")
