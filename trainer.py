@@ -3,13 +3,17 @@ import tensorflow as tf
 import settings
 FLAGS = settings.FLAGS
 
+import os
 import re
 import copy
+from datetime import datetime
+import time
 from datasets import DataSet
 
 import model
 import train_operation
 import slim.slim
+import numpy as np
 
 def train():
     with tf.Graph().as_default():
@@ -53,6 +57,8 @@ def train():
         with tf.control_dependencies([loss_averages_op]):
             loss = tf.identity(total_loss)
 
+        # Reuse variables for the next tower.
+        tf.get_variable_scope().reuse_variables()
 
         # Retain the summaries from the final tower.
         summaries = tf.get_collection(tf.GraphKeys.SUMMARIES)
@@ -69,7 +75,63 @@ def train():
         # summary
         summaries.extend(input_summaries)
 
-        # train
+        # saver
+        saver = tf.train.Saver(tf.all_variables())
+
+        # Build the summary operation from the last tower summaries.
+        summary_op = tf.merge_summary(summaries)
+
+        # initialization
+        init = tf.initialize_all_variables()
+
+        # session
+        sess = tf.Session(config=tf.ConfigProto(
+            allow_soft_placement=True,
+            log_device_placement=FLAGS.log_device_placement))
+        sess.run(init)
+
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+
+        if FLAGS.pretrained_model_checkpoint_path:
+            assert tf.gfile.Exists(FLAGS.pretrained_model_checkpoint_path)
+            variables_to_restore = tf.get_collection(
+                slim.variables.VARIABLES_TO_RESTORE)
+            restorer = tf.train.Saver(variables_to_restore)
+            restorer.restore(sess, FLAGS.pretrained_model_checkpoint_path)
+            print('%s: Pre-trained model restored from %s' %
+                  (datetime.now(), FLAGS.pretrained_model_checkpoint_path))
+
+        summary_writer = tf.train.SummaryWriter(
+            FLAGS.train_dir,
+            graph_def=sess.graph.as_graph_def(add_shapes=True))
+
+        for step in xrange(FLAGS.max_steps):
+            start_time = time.time()
+            _, loss_value = sess.run([train_op, loss])
+            duration = time.time() - start_time
+
+            assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
+
+            if step % 10 == 0:
+                examples_per_sec = FLAGS.batch_size / float(duration)
+                format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
+                              'sec/batch)')
+                print(format_str % (datetime.now(), step, loss_value,
+                                    examples_per_sec, duration))
+
+            if step % 100 == 0:
+                summary_str = sess.run(summary_op)
+                summary_writer.add_summary(summary_str, step)
+
+            # Save the model checkpoint periodically.
+            if step % 5000 == 0 or (step + 1) == FLAGS.max_steps:
+                checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
+                saver.save(sess, checkpoint_path, global_step=step)
+
+        coord.request_stop()
+        coord.join(threads)
+        sess.close()
 
 def test():
     # load settings file
