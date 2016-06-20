@@ -45,10 +45,6 @@ def train(total_loss, global_step, summaries, batchnorm_updates):
     # Apply the gradients to adjust the shared variables.
     apply_gradient_op = opt.apply_gradients(grads, global_step=global_step)
 
-    # Add histograms for trainable variables.
-    for var in tf.trainable_variables():
-        summaries.append(tf.histogram_summary(var.op.name, var))
-
     # Track the moving averages of all trainable variables.
     # Note that we maintain a "double-average" of the BatchNormalization
     # global statistics. This is more complicated then need be but we employ

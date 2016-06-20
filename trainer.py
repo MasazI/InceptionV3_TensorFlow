@@ -69,17 +69,21 @@ def train():
         # other stats from the other towers without significant detriment.
         batchnorm_updates = tf.get_collection(slim.ops.UPDATE_OPS_COLLECTION)
 
-        # train_operation
+        # add input summaries
+        summaries.extend(input_summaries)
+
+        # train_operation and operation summaries
         train_op = train_operation.train(loss, global_step, summaries, batchnorm_updates)
 
-        # summary
-        summaries.extend(input_summaries)
+        # trainable variables's summary
+        for var in tf.trainable_variables():
+            summaries.append(tf.histogram_summary(var.op.name, var))
 
         # saver
         saver = tf.train.Saver(tf.all_variables())
 
         # Build the summary operation from the last tower summaries.
-        summary_op = tf.merge_summary(summaries)
+        #summary_op = tf.merge_summary(summaries)
 
         # initialization
         init = tf.initialize_all_variables()
@@ -121,8 +125,9 @@ def train():
                                     examples_per_sec, duration))
 
             if step % 100 == 0:
-                summary_str = sess.run(summary_op)
-                summary_writer.add_summary(summary_str, step)
+                pass
+                #summary_str = sess.run(summary_op)
+                #summary_writer.add_summary(summary_str, step)
 
             # Save the model checkpoint periodically.
             if step % 5000 == 0 or (step + 1) == FLAGS.max_steps:
