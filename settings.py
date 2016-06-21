@@ -6,7 +6,7 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 # Flags train settings
-flags.DEFINE_integer('batch_size', 30, 'the number of images in a batch.')
+flags.DEFINE_integer('batch_size', 100, 'the number of images in a batch.')
 flags.DEFINE_string('tfcsv', 'data/train_csv.txt', 'path to tf csv file for training.')
 tf.app.flags.DEFINE_string('train_dir', 'train', "Directory where to write event logs and checkpoint")
 tf.app.flags.DEFINE_integer('num_classes', 101, "Number of classes")

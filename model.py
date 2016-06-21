@@ -58,7 +58,9 @@ def inference(images, num_classes, for_training=False, restore_logits=True, scop
         # Grab the logits associated with the side head. Employed during training.
         auxiliary_logits = endpoints['aux_logits']
 
-        return logits, auxiliary_logits
+    softmax = tf.nn.softmax(logits)
+
+    return logits, auxiliary_logits, softmax
 
 
 

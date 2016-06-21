@@ -112,7 +112,7 @@ def train():
 
         for step in xrange(FLAGS.max_steps):
             start_time = time.time()
-            _, loss_value = sess.run([train_op, loss])
+            _, logits_eval, loss_value, labels_eval = sess.run([train_op, logits[2], loss, labels])
             duration = time.time() - start_time
 
             assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
@@ -125,7 +125,10 @@ def train():
                                     examples_per_sec, duration))
 
             if step % 100 == 0:
-                pass
+                print("predict:")
+                print logits_eval.argmax(0)
+                print("target:")
+                print labels_eval
                 #summary_str = sess.run(summary_op)
                 #summary_writer.add_summary(summary_str, step)
 
@@ -137,6 +140,7 @@ def train():
         coord.request_stop()
         coord.join(threads)
         sess.close()
+
 
 def test():
     # load settings file

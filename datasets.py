@@ -41,7 +41,7 @@ class DataSet:
         image = tf.image.resize_images(image, FLAGS.input_h, FLAGS.input_w)
 
         min_fraction_of_examples_in_queue = 0.4
-        min_queue_examples = int(50 * min_fraction_of_examples_in_queue)
+        min_queue_examples = int(100 * min_fraction_of_examples_in_queue)
         print ('filling queue with %d train images before starting to train.  This will take a few minutes.' % min_queue_examples)
 
         return self._generate_image_and_label_batch(image, label, min_queue_examples, batch_size)
