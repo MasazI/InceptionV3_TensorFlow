@@ -50,18 +50,19 @@ def train():
         print len(losses)
         print "="*10
 
-        for l in losses + [total_loss]:
-            # Remove 'tower_[0-9]/' from the name in case this is a multi-GPU training
-            # session. This helps the clarity of presentation on TensorBoard.
-            loss_name = re.sub('%s_[0-9]*/' % model.TOWER_NAME, '', l.op.name)
-            # Name each loss as '(raw)' and name the moving average version of the loss
-            # as the original loss name.
-            tf.scalar_summary(loss_name + ' (raw)', l)
-            tf.scalar_summary(loss_name, loss_averages.average(l))
+        # for l in losses + [total_loss]:
+        #     # Remove 'tower_[0-9]/' from the name in case this is a multi-GPU training
+        #     # session. This helps the clarity of presentation on TensorBoard.
+        #     loss_name = re.sub('%s_[0-9]*/' % model.TOWER_NAME, '', l.op.name)
+        #     # Name each loss as '(raw)' and name the moving average version of the loss
+        #     # as the original loss name.
+        #     tf.scalar_summary(loss_name + ' (raw)', l)
+        #     tf.scalar_summary(loss_name, loss_averages.average(l))
 
         # loss to calcurate gradients
         with tf.control_dependencies([loss_averages_op]):
             total_loss = tf.identity(total_loss)
+        #tf.scalar_summary("loss", total_loss)
 
         # Reuse variables for the next tower.
         tf.get_variable_scope().reuse_variables()
@@ -76,7 +77,7 @@ def train():
         batchnorm_updates = tf.get_collection(slim.ops.UPDATE_OPS_COLLECTION)
 
         # add input summaries
-        summaries.extend(input_summaries)
+        # summaries.extend(input_summaries)
 
         # train_operation and operation summaries
         train_op = train_operation.train(total_loss, global_step, summaries, batchnorm_updates)
@@ -89,7 +90,7 @@ def train():
         saver = tf.train.Saver(tf.all_variables())
 
         # Build the summary operation from the last tower summaries.
-        #summary_op = tf.merge_summary(summaries)
+        summary_op = tf.merge_summary(summaries)
 
         # initialization
         init = tf.initialize_all_variables()
@@ -135,8 +136,8 @@ def train():
                 print logits_eval.argmax(1)
                 print("target:")
                 print labels_eval
-                #summary_str = sess.run(summary_op)
-                #summary_writer.add_summary(summary_str, step)
+                summary_str = sess.run(summary_op)
+                summary_writer.add_summary(summary_str, step)
 
             # Save the model checkpoint periodically.
             if step % 5000 == 0 or (step + 1) == FLAGS.max_steps:
