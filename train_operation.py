@@ -30,8 +30,8 @@ def train(total_loss, global_step, summaries, batchnorm_updates):
     opt = tf.train.RMSPropOptimizer(lr, RMSPROP_DECAY,
                                     momentum=RMSPROP_MOMENTUM,
                                     epsilon=RMSPROP_EPSILON)
+    op = tf.train.AdamOptimizer(lr)
     grads = opt.compute_gradients(total_loss)
-
 
     # Add a summary to track the learning rate.
     summaries.append(tf.scalar_summary('learning_rate', lr))

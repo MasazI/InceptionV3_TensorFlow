@@ -6,7 +6,7 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 # Flags train settings
-flags.DEFINE_integer('batch_size', 100, 'the number of images in a batch.')
+flags.DEFINE_integer('batch_size', 5, 'the number of images in a batch.')
 flags.DEFINE_string('tfcsv', 'data/train_csv.txt', 'path to tf csv file for training.')
 tf.app.flags.DEFINE_string('train_dir', 'train', "Directory where to write event logs and checkpoint")
 tf.app.flags.DEFINE_integer('num_classes', 101, "Number of classes")
@@ -23,9 +23,14 @@ tf.app.flags.DEFINE_integer('image_w_org', 64, "original image weight")
 tf.app.flags.DEFINE_integer('image_c_org', 3, "original image weight")
 
 # FLags train inputs settings
+tf.app.flags.DEFINE_integer('scale_h', 250, "scale image height")
+tf.app.flags.DEFINE_integer('scale_w', 250, "scale image weight")
 tf.app.flags.DEFINE_integer('input_h', 229, "input image height")
 tf.app.flags.DEFINE_integer('input_w', 229, "input image weight")
 tf.app.flags.DEFINE_integer('input_c', 3, "input image weight")
+tf.app.flags.DEFINE_integer('crop_h', 200, "crop image height")
+tf.app.flags.DEFINE_integer('crop_w', 200, "crop image weight")
+
 
 # Flags governing the hardware employed for running TensorFlow.
 tf.app.flags.DEFINE_integer('num_gpus', 1, "How many GPUs to use.")

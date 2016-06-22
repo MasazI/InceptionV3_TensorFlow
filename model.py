@@ -43,6 +43,7 @@ def inference(images, num_classes, for_training=False, restore_logits=True, scop
                             stddev=0.1,
                             activation=tf.nn.relu,
                             batch_norm_params=batch_norm_params):
+            # endpoints = {"logits", "predictions"}, predictions is softmax of logits
             logits, endpoints = slim.inception.inception_v3(
                 images,
                 dropout_keep_prob=0.8,
@@ -51,15 +52,18 @@ def inference(images, num_classes, for_training=False, restore_logits=True, scop
                 restore_logits=restore_logits,
                 scope=scope)
 
-
         # Add summaries for viewing model statistics on TensorBoard.
         _activation_summaries(endpoints)
 
         # Grab the logits associated with the side head. Employed during training.
         auxiliary_logits = endpoints['aux_logits']
 
-    softmax = tf.nn.softmax(logits)
+    softmax = endpoints['predictions']
 
+    print logits.get_shape()
+    print softmax.get_shape()
+
+    # logits: output of final layer, auxliary_logits: output of hidden layer, softmax: predictions
     return logits, auxiliary_logits, softmax
 
 
@@ -90,6 +94,13 @@ def loss(logits, labels, batch_size=None):
     dense_labels = tf.sparse_to_dense(concated,
                                     [batch_size, num_classes],
                                     1.0, 0.0)
+
+    print "-"*10
+    print type(logits)
+    print len(logits)
+    print logits[0].get_shape()
+    print logits[1].get_shape()
+    print "-"*10
 
     # Cross entropy loss for the main softmax prediction.
     slim.losses.cross_entropy_loss(logits[0],

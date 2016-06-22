@@ -22,7 +22,7 @@ def train():
 
         # get datsets
         dataset = DataSet()
-        images, labels = dataset.csv_inputs(FLAGS.tfcsv, FLAGS.batch_size)
+        images, labels = dataset.csv_inputs(FLAGS.tfcsv, FLAGS.batch_size, distorted=True)
 
         input_summaries = copy.copy(tf.get_collection(tf.GraphKeys.SUMMARIES))
 
@@ -30,8 +30,9 @@ def train():
         restore_logits = not FLAGS.fine_tune
 
         # inference
-        logits = model.inference(images, num_classes, for_training=True,
-                                     restore_logits=restore_logits)
+        # logits is tuple (logits, aux_liary_logits, predictions)
+        # logits: output of final layer, auxliary_logits: output of hidden layer, softmax: predictions
+        logits = model.inference(images, num_classes, for_training=True, restore_logits=restore_logits)
         # loss
         model.loss(logits, labels, batch_size=FLAGS.batch_size)
         losses = tf.get_collection(slim.losses.LOSSES_COLLECTION)
@@ -44,6 +45,11 @@ def train():
         loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
         loss_averages_op = loss_averages.apply(losses + [total_loss])
 
+        print "="*10
+        print "loss length:"
+        print len(losses)
+        print "="*10
+
         for l in losses + [total_loss]:
             # Remove 'tower_[0-9]/' from the name in case this is a multi-GPU training
             # session. This helps the clarity of presentation on TensorBoard.
@@ -55,7 +61,7 @@ def train():
 
         # loss to calcurate gradients
         with tf.control_dependencies([loss_averages_op]):
-            loss = tf.identity(total_loss)
+            total_loss = tf.identity(total_loss)
 
         # Reuse variables for the next tower.
         tf.get_variable_scope().reuse_variables()
@@ -73,7 +79,7 @@ def train():
         summaries.extend(input_summaries)
 
         # train_operation and operation summaries
-        train_op = train_operation.train(loss, global_step, summaries, batchnorm_updates)
+        train_op = train_operation.train(total_loss, global_step, summaries, batchnorm_updates)
 
         # trainable variables's summary
         for var in tf.trainable_variables():
@@ -112,21 +118,21 @@ def train():
 
         for step in xrange(FLAGS.max_steps):
             start_time = time.time()
-            _, logits_eval, loss_value, labels_eval = sess.run([train_op, logits[2], loss, labels])
+            _, logits_eval, loss_value, labels_eval = sess.run([train_op, logits[0], total_loss, labels])
             duration = time.time() - start_time
 
             assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
 
             if step % 10 == 0:
                 examples_per_sec = FLAGS.batch_size / float(duration)
-                format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
-                              'sec/batch)')
-                print(format_str % (datetime.now(), step, loss_value,
-                                    examples_per_sec, duration))
+                format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f sec/batch)')
+                print(format_str % (datetime.now(), step, loss_value, examples_per_sec, duration))
 
             if step % 100 == 0:
                 print("predict:")
-                print logits_eval.argmax(0)
+                print type(logits_eval)
+                print logits_eval.shape
+                print logits_eval.argmax(1)
                 print("target:")
                 print labels_eval
                 #summary_str = sess.run(summary_op)
@@ -135,7 +141,7 @@ def train():
             # Save the model checkpoint periodically.
             if step % 5000 == 0 or (step + 1) == FLAGS.max_steps:
                 checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
-                saver.save(sess, checkpoint_path, global_step=step)
+            saver.save(sess, checkpoint_path, global_step=step)
 
         coord.request_stop()
         coord.join(threads)
