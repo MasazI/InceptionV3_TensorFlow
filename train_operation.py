@@ -27,10 +27,10 @@ def train(total_loss, global_step, summaries, batchnorm_updates):
                                     staircase=True)
 
     # Create an optimizer that performs gradient descent.
-    opt = tf.train.RMSPropOptimizer(lr, RMSPROP_DECAY,
-                                    momentum=RMSPROP_MOMENTUM,
-                                    epsilon=RMSPROP_EPSILON)
-    op = tf.train.AdamOptimizer(lr)
+    #opt = tf.train.RMSPropOptimizer(lr, RMSPROP_DECAY,
+    #                                momentum=RMSPROP_MOMENTUM,
+    #                                epsilon=RMSPROP_EPSILON)
+    opt = tf.train.AdamOptimizer(lr)
     grads = opt.compute_gradients(total_loss)
 
     # Add a summary to track the learning rate.
