@@ -19,10 +19,16 @@ def train():
     with tf.Graph().as_default():
         # globalなstep数
         global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
-
-        # get datsets
         dataset = DataSet()
+
+        # get trainsets
+        print("The number of train images: %d", (dataset.cnt_samples(FLAGS.tfcsv)))
         images, labels = dataset.csv_inputs(FLAGS.tfcsv, FLAGS.batch_size, distorted=True)
+
+        # get testsets
+        test_cnt = dataset.cnt_samples(FLAGS.testcsv)
+        print("The number of train images: %d", ())
+        images_test, labels_test = dataset.test_inputs(FLAGS.tfcsv, test_cnt)
 
         input_summaries = copy.copy(tf.get_collection(tf.GraphKeys.SUMMARIES))
 
@@ -33,8 +39,12 @@ def train():
         # logits is tuple (logits, aux_liary_logits, predictions)
         # logits: output of final layer, auxliary_logits: output of hidden layer, softmax: predictions
         logits = model.inference(images, num_classes, for_training=True, restore_logits=restore_logits)
+        logits_test = model.inference(images_test, num_classes, for_training=False, restore_logits=restore_logits, reuse=True, dropout_keep_prob=1.0)
+
         # loss
         model.loss(logits, labels, batch_size=FLAGS.batch_size)
+        losses_test = model.loss_test(logits_test, labels_test, batch_size=test_cnt)
+
         losses = tf.get_collection(slim.losses.LOSSES_COLLECTION)
 
         # Calculate the total loss for the current tower.
@@ -60,9 +70,10 @@ def train():
         #     tf.scalar_summary(loss_name, loss_averages.average(l))
 
         # loss to calcurate gradients
+        #
         with tf.control_dependencies([loss_averages_op]):
             total_loss = tf.identity(total_loss)
-        #tf.scalar_summary("loss", total_loss)
+        tf.scalar_summary("loss", total_loss)
 
         # Reuse variables for the next tower.
         tf.get_variable_scope().reuse_variables()
@@ -90,7 +101,8 @@ def train():
         saver = tf.train.Saver(tf.all_variables())
 
         # Build the summary operation from the last tower summaries.
-        summary_op = tf.merge_summary(summaries)
+        #summary_op = tf.merge_summary(summaries)
+        summary_op = tf.merge_all_summaries()
 
         # initialization
         init = tf.initialize_all_variables()
@@ -126,7 +138,7 @@ def train():
 
             if step % 10 == 0:
                 examples_per_sec = FLAGS.batch_size / float(duration)
-                format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f sec/batch)')
+                format_str = ('train %s: step %d, loss = %.2f (%.1f examples/sec; %.3f sec/batch)')
                 print(format_str % (datetime.now(), step, loss_value, examples_per_sec, duration))
 
             if step % 100 == 0:
@@ -138,6 +150,13 @@ def train():
                 print labels_eval
                 summary_str = sess.run(summary_op)
                 summary_writer.add_summary(summary_str, step)
+
+                test_start_time = time.time()
+                loss_test_val, aux_loss_test_val = sess.run([losses_test[0], losses_test[1]])
+                test_duration = time.time() - test_start_time
+                test_examples_per_sec = test_cnt / float(test_duration)
+                format_str_test = ('test %s: step %d, loss = %.2f, aux_losss = %.2f, (%.1f examples/sec; %.3f sec/batch)')
+                print(format_str_test % (datetime.now(), step, loss_test_val, aux_loss_test_val, test_examples_per_sec, test_duration))
 
             # Save the model checkpoint periodically.
             if step % 5000 == 0 or (step + 1) == FLAGS.max_steps:

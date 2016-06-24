@@ -53,7 +53,8 @@ def inception_v3(inputs,
                  num_classes=1000,
                  is_training=True,
                  restore_logits=True,
-                 scope=''):
+                 scope='',
+                 reuse=False):
   """Latest Inception from http://arxiv.org/abs/1512.00567.
 
     "Rethinking the Inception Architecture for Computer Vision"
@@ -80,25 +81,25 @@ def inception_v3(inputs,
     with scopes.arg_scope([ops.conv2d, ops.fc, ops.batch_norm, ops.dropout],
                           is_training=is_training):
       with scopes.arg_scope([ops.conv2d, ops.max_pool, ops.avg_pool],
-                            stride=1, padding='VALID'):
+                            stride=1, padding='VALID') as scope:
         # 299 x 299 x 3
         end_points['conv0'] = ops.conv2d(inputs, 32, [3, 3], stride=2,
-                                         scope='conv0')
+                                         scope='conv0', reuse=reuse)
         # 149 x 149 x 32
         end_points['conv1'] = ops.conv2d(end_points['conv0'], 32, [3, 3],
-                                         scope='conv1')
+                                         scope='conv1', reuse=reuse)
         # 147 x 147 x 32
         end_points['conv2'] = ops.conv2d(end_points['conv1'], 64, [3, 3],
-                                         padding='SAME', scope='conv2')
+                                         padding='SAME', scope='conv2', reuse=reuse)
         # 147 x 147 x 64
         end_points['pool1'] = ops.max_pool(end_points['conv2'], [3, 3],
                                            stride=2, scope='pool1')
         # 73 x 73 x 64
         end_points['conv3'] = ops.conv2d(end_points['pool1'], 80, [1, 1],
-                                         scope='conv3')
+                                         scope='conv3', reuse=reuse)
         # 73 x 73 x 80.
         end_points['conv4'] = ops.conv2d(end_points['conv3'], 192, [3, 3],
-                                         scope='conv4')
+                                         scope='conv4', reuse=reuse)
         # 71 x 71 x 192.
         end_points['pool2'] = ops.max_pool(end_points['conv4'], [3, 3],
                                            stride=2, scope='pool2')
@@ -109,67 +110,99 @@ def inception_v3(inputs,
                             stride=1, padding='SAME'):
         # mixed: 35 x 35 x 256.
         with tf.variable_scope('mixed_35x35x256a'):
-          with tf.variable_scope('branch1x1'):
+          with tf.variable_scope('branch1x1') as scope:
+            if reuse:
+                scope.reuse_variables()
             branch1x1 = ops.conv2d(net, 64, [1, 1])
-          with tf.variable_scope('branch5x5'):
+          with tf.variable_scope('branch5x5') as scope:
+            if reuse:
+                scope.reuse_variables()
             branch5x5 = ops.conv2d(net, 48, [1, 1])
             branch5x5 = ops.conv2d(branch5x5, 64, [5, 5])
-          with tf.variable_scope('branch3x3dbl'):
+          with tf.variable_scope('branch3x3dbl') as scope:
+            if reuse:
+                scope.reuse_variables()
             branch3x3dbl = ops.conv2d(net, 64, [1, 1])
             branch3x3dbl = ops.conv2d(branch3x3dbl, 96, [3, 3])
             branch3x3dbl = ops.conv2d(branch3x3dbl, 96, [3, 3])
-          with tf.variable_scope('branch_pool'):
+          with tf.variable_scope('branch_pool') as scope:
+            if reuse:
+                scope.reuse_variables()
             branch_pool = ops.avg_pool(net, [3, 3])
             branch_pool = ops.conv2d(branch_pool, 32, [1, 1])
           net = tf.concat(3, [branch1x1, branch5x5, branch3x3dbl, branch_pool])
           end_points['mixed_35x35x256a'] = net
         # mixed_1: 35 x 35 x 288.
         with tf.variable_scope('mixed_35x35x288a'):
-          with tf.variable_scope('branch1x1'):
+          with tf.variable_scope('branch1x1') as scope:
+            if reuse:
+              scope.reuse_variables()
             branch1x1 = ops.conv2d(net, 64, [1, 1])
-          with tf.variable_scope('branch5x5'):
+          with tf.variable_scope('branch5x5') as scope:
+            if reuse:
+              scope.reuse_variables()
             branch5x5 = ops.conv2d(net, 48, [1, 1])
             branch5x5 = ops.conv2d(branch5x5, 64, [5, 5])
-          with tf.variable_scope('branch3x3dbl'):
+          with tf.variable_scope('branch3x3dbl') as scope:
+            if reuse:
+              scope.reuse_variables()
             branch3x3dbl = ops.conv2d(net, 64, [1, 1])
             branch3x3dbl = ops.conv2d(branch3x3dbl, 96, [3, 3])
             branch3x3dbl = ops.conv2d(branch3x3dbl, 96, [3, 3])
-          with tf.variable_scope('branch_pool'):
+          with tf.variable_scope('branch_pool') as scope:
+            if reuse:
+              scope.reuse_variables()
             branch_pool = ops.avg_pool(net, [3, 3])
             branch_pool = ops.conv2d(branch_pool, 64, [1, 1])
           net = tf.concat(3, [branch1x1, branch5x5, branch3x3dbl, branch_pool])
           end_points['mixed_35x35x288a'] = net
         # mixed_2: 35 x 35 x 288.
         with tf.variable_scope('mixed_35x35x288b'):
-          with tf.variable_scope('branch1x1'):
+          with tf.variable_scope('branch1x1') as scope:
+            if reuse:
+              scope.reuse_variables()
             branch1x1 = ops.conv2d(net, 64, [1, 1])
-          with tf.variable_scope('branch5x5'):
+          with tf.variable_scope('branch5x5') as scope:
+            if reuse:
+              scope.reuse_variables()
             branch5x5 = ops.conv2d(net, 48, [1, 1])
             branch5x5 = ops.conv2d(branch5x5, 64, [5, 5])
-          with tf.variable_scope('branch3x3dbl'):
+          with tf.variable_scope('branch3x3dbl') as scope:
+            if reuse:
+              scope.reuse_variables()
             branch3x3dbl = ops.conv2d(net, 64, [1, 1])
             branch3x3dbl = ops.conv2d(branch3x3dbl, 96, [3, 3])
             branch3x3dbl = ops.conv2d(branch3x3dbl, 96, [3, 3])
-          with tf.variable_scope('branch_pool'):
+          with tf.variable_scope('branch_pool') as scope:
+            if reuse:
+              scope.reuse_variables()
             branch_pool = ops.avg_pool(net, [3, 3])
             branch_pool = ops.conv2d(branch_pool, 64, [1, 1])
           net = tf.concat(3, [branch1x1, branch5x5, branch3x3dbl, branch_pool])
           end_points['mixed_35x35x288b'] = net
         # mixed_3: 17 x 17 x 768.
         with tf.variable_scope('mixed_17x17x768a'):
-          with tf.variable_scope('branch3x3'):
+          with tf.variable_scope('branch3x3') as scope:
+            if reuse:
+              scope.reuse_variables()
             branch3x3 = ops.conv2d(net, 384, [3, 3], stride=2, padding='VALID')
-          with tf.variable_scope('branch3x3dbl'):
+          with tf.variable_scope('branch3x3dbl') as scope:
+            if reuse:
+              scope.reuse_variables()
             branch3x3dbl = ops.conv2d(net, 64, [1, 1])
             branch3x3dbl = ops.conv2d(branch3x3dbl, 96, [3, 3])
             branch3x3dbl = ops.conv2d(branch3x3dbl, 96, [3, 3],
                                       stride=2, padding='VALID')
-          with tf.variable_scope('branch_pool'):
+          with tf.variable_scope('branch_pool') as scope:
+            if reuse:
+              scope.reuse_variables()
             branch_pool = ops.max_pool(net, [3, 3], stride=2, padding='VALID')
           net = tf.concat(3, [branch3x3, branch3x3dbl, branch_pool])
           end_points['mixed_17x17x768a'] = net
         # mixed4: 17 x 17 x 768.
-        with tf.variable_scope('mixed_17x17x768b'):
+        with tf.variable_scope('mixed_17x17x768b') as scope:
+          if reuse:
+            scope.reuse_variables()
           with tf.variable_scope('branch1x1'):
             branch1x1 = ops.conv2d(net, 192, [1, 1])
           with tf.variable_scope('branch7x7'):
@@ -188,7 +221,9 @@ def inception_v3(inputs,
           net = tf.concat(3, [branch1x1, branch7x7, branch7x7dbl, branch_pool])
           end_points['mixed_17x17x768b'] = net
         # mixed_5: 17 x 17 x 768.
-        with tf.variable_scope('mixed_17x17x768c'):
+        with tf.variable_scope('mixed_17x17x768c') as scope:
+          if reuse:
+            scope.reuse_variables()
           with tf.variable_scope('branch1x1'):
             branch1x1 = ops.conv2d(net, 192, [1, 1])
           with tf.variable_scope('branch7x7'):
@@ -207,7 +242,9 @@ def inception_v3(inputs,
           net = tf.concat(3, [branch1x1, branch7x7, branch7x7dbl, branch_pool])
           end_points['mixed_17x17x768c'] = net
         # mixed_6: 17 x 17 x 768.
-        with tf.variable_scope('mixed_17x17x768d'):
+        with tf.variable_scope('mixed_17x17x768d') as scope:
+          if reuse:
+            scope.reuse_variables()
           with tf.variable_scope('branch1x1'):
             branch1x1 = ops.conv2d(net, 192, [1, 1])
           with tf.variable_scope('branch7x7'):
@@ -226,7 +263,9 @@ def inception_v3(inputs,
           net = tf.concat(3, [branch1x1, branch7x7, branch7x7dbl, branch_pool])
           end_points['mixed_17x17x768d'] = net
         # mixed_7: 17 x 17 x 768.
-        with tf.variable_scope('mixed_17x17x768e'):
+        with tf.variable_scope('mixed_17x17x768e') as scope:
+          if reuse:
+            scope.reuse_variables()
           with tf.variable_scope('branch1x1'):
             branch1x1 = ops.conv2d(net, 192, [1, 1])
           with tf.variable_scope('branch7x7'):
@@ -246,7 +285,9 @@ def inception_v3(inputs,
           end_points['mixed_17x17x768e'] = net
         # Auxiliary Head logits
         aux_logits = tf.identity(end_points['mixed_17x17x768e'])
-        with tf.variable_scope('aux_logits'):
+        with tf.variable_scope('aux_logits') as scope:
+          if reuse:
+            scope.reuse_variables()
           aux_logits = ops.avg_pool(aux_logits, [5, 5], stride=3,
                                     padding='VALID')
           aux_logits = ops.conv2d(aux_logits, 128, [1, 1], scope='proj')
@@ -262,7 +303,9 @@ def inception_v3(inputs,
         # Note that the scope below is not changed to not void previous
         # checkpoints.
         # (TODO) Fix the scope when appropriate.
-        with tf.variable_scope('mixed_17x17x1280a'):
+        with tf.variable_scope('mixed_17x17x1280a') as scope:
+          if reuse:
+            scope.reuse_variables()
           with tf.variable_scope('branch3x3'):
             branch3x3 = ops.conv2d(net, 192, [1, 1])
             branch3x3 = ops.conv2d(branch3x3, 320, [3, 3], stride=2,
@@ -278,7 +321,9 @@ def inception_v3(inputs,
           net = tf.concat(3, [branch3x3, branch7x7x3, branch_pool])
           end_points['mixed_17x17x1280a'] = net
         # mixed_9: 8 x 8 x 2048.
-        with tf.variable_scope('mixed_8x8x2048a'):
+        with tf.variable_scope('mixed_8x8x2048a') as scope:
+          if reuse:
+            scope.reuse_variables()
           with tf.variable_scope('branch1x1'):
             branch1x1 = ops.conv2d(net, 320, [1, 1])
           with tf.variable_scope('branch3x3'):
@@ -296,7 +341,9 @@ def inception_v3(inputs,
           net = tf.concat(3, [branch1x1, branch3x3, branch3x3dbl, branch_pool])
           end_points['mixed_8x8x2048a'] = net
         # mixed_10: 8 x 8 x 2048.
-        with tf.variable_scope('mixed_8x8x2048b'):
+        with tf.variable_scope('mixed_8x8x2048b') as scope:
+          if reuse:
+            scope.reuse_variables()
           with tf.variable_scope('branch1x1'):
             branch1x1 = ops.conv2d(net, 320, [1, 1])
           with tf.variable_scope('branch3x3'):
@@ -322,7 +369,7 @@ def inception_v3(inputs,
           net = ops.flatten(net, scope='flatten')
           # 2048
           logits = ops.fc(net, num_classes, activation=None, scope='logits',
-                          restore=restore_logits)
+                          restore=restore_logits, reuse=reuse)
           # 1000
           end_points['logits'] = logits
           end_points['predictions'] = tf.nn.softmax(logits, name='predictions')

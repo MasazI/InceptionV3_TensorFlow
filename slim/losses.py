@@ -138,6 +138,25 @@ def l2_loss(tensor, weight=1.0, scope=None):
     tf.add_to_collection(LOSSES_COLLECTION, loss)
     return loss
 
+def cross_entropy_loss_without_collection(logits, one_hot_labels, label_smoothing=0,
+                       weight=1.0, scope=None):
+    logits.get_shape().assert_is_compatible_with(one_hot_labels.get_shape())
+    with tf.op_scope([logits, one_hot_labels], scope, 'CrossEntropyLoss'):
+        num_classes = one_hot_labels.get_shape()[-1].value
+        one_hot_labels = tf.cast(one_hot_labels, logits.dtype)
+        if label_smoothing > 0:
+            smooth_positives = 1.0 - label_smoothing
+            smooth_negatives = label_smoothing / num_classes
+            one_hot_labels = one_hot_labels * smooth_positives + smooth_negatives
+        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits,
+                                                                one_hot_labels,
+                                                                name='xentropy')
+        weight = tf.convert_to_tensor(weight,
+                                      dtype=logits.dtype.base_dtype,
+                                      name='loss_weight')
+        loss = tf.mul(weight, tf.reduce_mean(cross_entropy), name='value')
+        return loss
+
 
 def cross_entropy_loss(logits, one_hot_labels, label_smoothing=0,
                        weight=1.0, scope=None):
@@ -172,3 +191,14 @@ def cross_entropy_loss(logits, one_hot_labels, label_smoothing=0,
     loss = tf.mul(weight, tf.reduce_mean(cross_entropy), name='value')
     tf.add_to_collection(LOSSES_COLLECTION, loss)
     return loss
+
+def square_loss(logits, targets, weight=1.0, scope=None):
+    with tf.op_scope([logits, targets], scope, 'SquareLoss'):
+        weight = tf.convert_to_tensor(weight,
+                                      dtype=logits.dtype.base_dtype,
+                                      name='loss_weight')
+        square = tf.square(logits, targets)
+        loss = tf.mul(weight, tf.reduce_mean(square), name='value')
+        tf.add_to_collection(LOSSES_COLLECTION, loss)
+        return loss
+

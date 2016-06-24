@@ -34,13 +34,13 @@ def train(total_loss, global_step, summaries, batchnorm_updates):
     grads = opt.compute_gradients(total_loss)
 
     # Add a summary to track the learning rate.
-    #summaries.append(tf.scalar_summary('learning_rate', lr))
+    summaries.append(tf.scalar_summary('learning_rate', lr))
 
     # Add histograms for gradients.
-    # for grad, var in grads:
-    #     if grad is not None:
-    #         summaries.append(
-    #             tf.histogram_summary(var.op.name + '/gradients', grad))
+    for grad, var in grads:
+        if grad is not None:
+            summaries.append(
+                tf.histogram_summary(var.op.name + '/gradients', grad))
 
     # Apply the gradients to adjust the shared variables.
     apply_gradient_op = opt.apply_gradients(grads, global_step=global_step)
