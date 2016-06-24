@@ -27,8 +27,9 @@ def train():
 
         # get testsets
         test_cnt = dataset.cnt_samples(FLAGS.testcsv)
+        test_cnt = 5
         print("The number of train images: %d", ())
-        images_test, labels_test = dataset.test_inputs(FLAGS.tfcsv, test_cnt)
+        images_test, labels_test = dataset.test_inputs(FLAGS.testcsv, test_cnt)
 
         input_summaries = copy.copy(tf.get_collection(tf.GraphKeys.SUMMARIES))
 

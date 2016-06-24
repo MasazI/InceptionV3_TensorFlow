@@ -62,8 +62,7 @@ class DataSet:
                 [image, label],
                 batch_size=batch_size,
                 num_threads=num_preprocess_threads,
-                capacity=min_queue_examples + 3 * FLAGS.batch_size,
-                min_after_dequeue=min_queue_examples
+                capacity=min_queue_examples + 3 * FLAGS.batch_size
             )
 
         return images, labels
@@ -73,7 +72,7 @@ class DataSet:
 
     def test_inputs(self, csv, batch_size):
         print("input csv file path: %s, batch size: %d" % (csv, batch_size))
-        filename_queue = tf.train.string_input_producer([csv], shuffle=True)
+        filename_queue = tf.train.string_input_producer([csv], shuffle=False)
         reader = tf.TextLineReader()
         _, serialized_example = reader.read(filename_queue)
         filename, label = tf.decode_csv(serialized_example, [["path"], [0]])
@@ -87,7 +86,8 @@ class DataSet:
 
         # resize to distort
         dist = tf.image.resize_images(image, FLAGS.scale_h, FLAGS.scale_w)
-        dist = tf.random_crop(image, [FLAGS.input_h, FLAGS.input_w, 3])
+        # random crop
+        dist = tf.image.resize_image_with_crop_or_pad(dist, FLAGS.input_h, FLAGS.input_w)
 
         min_fraction_of_examples_in_queue = 0.4
         min_queue_examples = int(FLAGS.num_examples_per_epoch_for_train * min_fraction_of_examples_in_queue)
