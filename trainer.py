@@ -27,7 +27,7 @@ def train():
 
         # get testsets
         test_cnt = dataset.cnt_samples(FLAGS.testcsv)
-        test_cnt = 5
+        #test_cnt = 5
         print("The number of train images: %d", ())
         images_test, labels_test = dataset.test_inputs(FLAGS.testcsv, test_cnt)
 
@@ -44,21 +44,26 @@ def train():
 
         # loss
         model.loss(logits, labels, batch_size=FLAGS.batch_size)
-        losses_test = model.loss_test(logits_test, labels_test, batch_size=test_cnt)
-
+        model.loss_test(logits_test, labels_test, batch_size=test_cnt)
         losses = tf.get_collection(slim.losses.LOSSES_COLLECTION)
+        losses_test = tf.get_collection(slim.losses.LOSSES_COLLECTION_TEST)
 
         # Calculate the total loss for the current tower.
         regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         total_loss = tf.add_n(losses + regularization_losses, name='total_loss')
+        #total_loss = tf.add_n(losses, name='total_loss')
+        total_loss_test = tf.add_n(losses_test, name='total_loss_test')
 
         # Compute the moving average of all individual losses and the total loss.
         loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
         loss_averages_op = loss_averages.apply(losses + [total_loss])
+        loss_averages_test = tf.train.ExponentialMovingAverage(0.9, name='avg_test')
+        loss_averages_op_test = loss_averages_test.apply(losses_test + [total_loss_test])
 
         print "="*10
         print "loss length:"
         print len(losses)
+        print len(losses_test)
         print "="*10
 
         # for l in losses + [total_loss]:
@@ -76,8 +81,12 @@ def train():
             total_loss = tf.identity(total_loss)
         tf.scalar_summary("loss", total_loss)
 
+        with tf.control_dependencies([loss_averages_op_test]):
+            total_loss_test = tf.identity(total_loss_test)
+        tf.scalar_summary("loss_eval", total_loss_test)
+
         # Reuse variables for the next tower.
-        tf.get_variable_scope().reuse_variables()
+        #tf.get_variable_scope().reuse_variables()
 
         # Retain the summaries from the final tower.
         summaries = tf.get_collection(tf.GraphKeys.SUMMARIES)
@@ -95,8 +104,8 @@ def train():
         train_op = train_operation.train(total_loss, global_step, summaries, batchnorm_updates)
 
         # trainable variables's summary
-        for var in tf.trainable_variables():
-            summaries.append(tf.histogram_summary(var.op.name, var))
+        #for var in tf.trainable_variables():
+        #    summaries.append(tf.histogram_summary(var.op.name, var))
 
         # saver
         saver = tf.train.Saver(tf.all_variables())
@@ -142,22 +151,28 @@ def train():
                 format_str = ('train %s: step %d, loss = %.2f (%.1f examples/sec; %.3f sec/batch)')
                 print(format_str % (datetime.now(), step, loss_value, examples_per_sec, duration))
 
-            if step % 100 == 0:
-                print("predict:")
-                print type(logits_eval)
-                print logits_eval.shape
-                print logits_eval.argmax(1)
-                print("target:")
-                print labels_eval
-                summary_str = sess.run(summary_op)
-                summary_writer.add_summary(summary_str, step)
+            # if step % 100 == 0:
+            print("predict:")
+            print type(logits_eval)
+            print logits_eval.shape
+            print logits_eval.argmax(1)
+            print("target:")
+            print labels_eval
+            summary_str = sess.run(summary_op)
+            summary_writer.add_summary(summary_str, step)
 
-                test_start_time = time.time()
-                loss_test_val, aux_loss_test_val = sess.run([losses_test[0], losses_test[1]])
-                test_duration = time.time() - test_start_time
-                test_examples_per_sec = test_cnt / float(test_duration)
-                format_str_test = ('test %s: step %d, loss = %.2f, aux_losss = %.2f, (%.1f examples/sec; %.3f sec/batch)')
-                print(format_str_test % (datetime.now(), step, loss_test_val, aux_loss_test_val, test_examples_per_sec, test_duration))
+            test_start_time = time.time()
+            logits_test_eval, total_loss_test_val, labels_test_eval = sess.run([logits_test[0], total_loss_test, labels_test])
+            test_duration = time.time() - test_start_time
+            print("test predict:")
+            print type(logits_test_eval)
+            print logits_test_eval.shape
+            print logits_test_eval.argmax(1)
+            print("test target:")
+            print labels_test_eval
+            test_examples_per_sec = test_cnt / float(test_duration)
+            format_str_test = ('test %s: step %d, loss = %.2f, (%.1f examples/sec; %.3f sec/batch)')
+            print(format_str_test % (datetime.now(), step, total_loss_test_val, test_examples_per_sec, test_duration))
 
             # Save the model checkpoint periodically.
             if step % 5000 == 0 or (step + 1) == FLAGS.max_steps:
@@ -180,7 +195,6 @@ def main(argv=None):
     if not tf.gfile.Exists(FLAGS.train_dir):
         tf.gfile.MakeDirs(FLAGS.train_dir)
     train()
-
 
 
 if __name__ == '__main__':

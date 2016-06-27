@@ -32,7 +32,7 @@ import tensorflow as tf
 # key for get_collection, i.e:
 #   losses = tf.get_collection(slim.losses.LOSSES_COLLECTION)
 LOSSES_COLLECTION = '_losses'
-
+LOSSES_COLLECTION_TEST = '_losses_test'
 
 def l1_regularizer(weight=1.0, scope=None):
   """Define a L1 regularizer.
@@ -141,7 +141,7 @@ def l2_loss(tensor, weight=1.0, scope=None):
 def cross_entropy_loss_without_collection(logits, one_hot_labels, label_smoothing=0,
                        weight=1.0, scope=None):
     logits.get_shape().assert_is_compatible_with(one_hot_labels.get_shape())
-    with tf.op_scope([logits, one_hot_labels], scope, 'CrossEntropyLoss'):
+    with tf.op_scope([logits, one_hot_labels], scope, 'CrossEntropyLossTest'):
         num_classes = one_hot_labels.get_shape()[-1].value
         one_hot_labels = tf.cast(one_hot_labels, logits.dtype)
         if label_smoothing > 0:
@@ -150,30 +150,17 @@ def cross_entropy_loss_without_collection(logits, one_hot_labels, label_smoothin
             one_hot_labels = one_hot_labels * smooth_positives + smooth_negatives
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits,
                                                                 one_hot_labels,
-                                                                name='xentropy')
+                                                                name='xentropy_test')
         weight = tf.convert_to_tensor(weight,
                                       dtype=logits.dtype.base_dtype,
-                                      name='loss_weight')
-        loss = tf.mul(weight, tf.reduce_mean(cross_entropy), name='value')
+                                      name='loss_weight_test')
+        loss = tf.mul(weight, tf.reduce_mean(cross_entropy), name='value_test')
+        tf.add_to_collection(LOSSES_COLLECTION_TEST, loss)
         return loss
 
 
 def cross_entropy_loss(logits, one_hot_labels, label_smoothing=0,
                        weight=1.0, scope=None):
-  """Define a Cross Entropy loss using softmax_cross_entropy_with_logits.
-
-  It can scale the loss by weight factor, and smooth the labels.
-
-  Args:
-    logits: [batch_size, num_classes] logits outputs of the network .
-    one_hot_labels: [batch_size, num_classes] target one_hot_encoded labels.
-    label_smoothing: if greater than 0 then smooth the labels.
-    weight: scale the loss by this factor.
-    scope: Optional scope for op_scope.
-
-  Returns:
-    A tensor with the softmax_cross_entropy loss.
-  """
   logits.get_shape().assert_is_compatible_with(one_hot_labels.get_shape())
   with tf.op_scope([logits, one_hot_labels], scope, 'CrossEntropyLoss'):
     num_classes = one_hot_labels.get_shape()[-1].value
@@ -191,6 +178,7 @@ def cross_entropy_loss(logits, one_hot_labels, label_smoothing=0,
     loss = tf.mul(weight, tf.reduce_mean(cross_entropy), name='value')
     tf.add_to_collection(LOSSES_COLLECTION, loss)
     return loss
+
 
 def square_loss(logits, targets, weight=1.0, scope=None):
     with tf.op_scope([logits, targets], scope, 'SquareLoss'):
