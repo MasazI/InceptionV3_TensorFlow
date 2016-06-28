@@ -124,7 +124,7 @@ class DataSet:
             dist = tf.image.random_flip_left_right(dist)
 
             # color constancy
-            dist = self.distort_color(dist)
+            #dist = self.distort_color(dist)
         else:
             # resize to input
             dist = tf.image.resize_images(image, FLAGS.input_h, FLAGS.input_w)
