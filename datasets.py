@@ -4,6 +4,8 @@ import tensorflow as tf
 import settings
 FLAGS = settings.FLAGS
 
+import numpy as np
+from PIL import Image
 
 class DataSet:
     def __init__(self):
@@ -56,7 +58,7 @@ class DataSet:
                 min_after_dequeue=min_queue_examples
             )
             # Display the training images in the visualizer
-            #tf.image_summary('images', images, max_images=batch_size)
+            tf.image_summary('images', images, max_images=batch_size)
         else:
             images, labels = tf.train.batch(
                 [image, label],
@@ -135,6 +137,12 @@ class DataSet:
         print ('filling queue with %d train images before starting to train.  This will take a few minutes.' % min_queue_examples)
 
         return self._generate_image_and_label_batch(dist, label, min_queue_examples, batch_size)
+
+    def output_images(self, images, output_dir, name):
+        for i, image in enumerate(images):
+            pilimg = Image.fromarray(np.uint8(image))
+            image_name = "%s/%05d_%s.png" % (output_dir, i, name)
+            pilimg.save(image_name)
 
 
 def debug(data):

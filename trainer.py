@@ -9,6 +9,7 @@ import copy
 from datetime import datetime
 import time
 from datasets import DataSet
+import datasets
 
 import model
 import train_operation
@@ -23,13 +24,18 @@ def train():
 
         # get trainsets
         print("The number of train images: %d", (dataset.cnt_samples(FLAGS.tfcsv)))
-        images, labels = dataset.csv_inputs(FLAGS.tfcsv, FLAGS.batch_size, distorted=True)
+        images, labels = dataset.csv_inputs(FLAGS.tfcsv, FLAGS.batch_size, distorted=False)
+
+        images_debug = datasets.debug(images)
 
         # get testsets
-        test_cnt = dataset.cnt_samples(FLAGS.testcsv)
-        #test_cnt = 5
+        #test_cnt = dataset.cnt_samples(FLAGS.testcsv)
+        test_cnt = 100
+	#test_cnt = 5
         print("The number of train images: %d", ())
         images_test, labels_test = dataset.test_inputs(FLAGS.testcsv, test_cnt)
+
+        images_test_debug = datasets.debug(images_test)
 
         input_summaries = copy.copy(tf.get_collection(tf.GraphKeys.SUMMARIES))
 
@@ -141,8 +147,10 @@ def train():
 
         for step in xrange(FLAGS.max_steps):
             start_time = time.time()
-            _, logits_eval, loss_value, labels_eval = sess.run([train_op, logits[0], total_loss, labels])
+            _, logits_eval, loss_value, labels_eval, images_debug_eval = sess.run([train_op, logits[0], total_loss, labels, images_debug])
             duration = time.time() - start_time
+
+            dataset.output_images(images_debug_eval, "debug", "train")
 
             assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
 
@@ -151,33 +159,36 @@ def train():
                 format_str = ('train %s: step %d, loss = %.2f (%.1f examples/sec; %.3f sec/batch)')
                 print(format_str % (datetime.now(), step, loss_value, examples_per_sec, duration))
 
-            # if step % 100 == 0:
-            print("predict:")
-            print type(logits_eval)
-            print logits_eval.shape
-            print logits_eval.argmax(1)
-            print("target:")
-            print labels_eval
-            summary_str = sess.run(summary_op)
-            summary_writer.add_summary(summary_str, step)
+            if step % 100 == 0:
+                print("predict:")
+                print type(logits_eval)
+                print logits_eval.shape
+                print logits_eval.argmax(1)
+                print("target:")
+                print labels_eval
+                summary_str = sess.run(summary_op)
+                summary_writer.add_summary(summary_str, step)
 
-            test_start_time = time.time()
-            logits_test_eval, total_loss_test_val, labels_test_eval = sess.run([logits_test[0], total_loss_test, labels_test])
-            test_duration = time.time() - test_start_time
-            print("test predict:")
-            print type(logits_test_eval)
-            print logits_test_eval.shape
-            print logits_test_eval.argmax(1)
-            print("test target:")
-            print labels_test_eval
-            test_examples_per_sec = test_cnt / float(test_duration)
-            format_str_test = ('test %s: step %d, loss = %.2f, (%.1f examples/sec; %.3f sec/batch)')
-            print(format_str_test % (datetime.now(), step, total_loss_test_val, test_examples_per_sec, test_duration))
+                test_start_time = time.time()
+                logits_test_eval, total_loss_test_val, labels_test_eval, images_test_debug_eval = sess.run([logits_test[0], total_loss_test, labels_test, images_test_debug])
+                test_duration = time.time() - test_start_time
 
-            # Save the model checkpoint periodically.
-            if step % 5000 == 0 or (step + 1) == FLAGS.max_steps:
-                checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
-            saver.save(sess, checkpoint_path, global_step=step)
+                dataset.output_images(images_test_debug_eval, "debug_test", "test")
+
+                print("test predict:")
+                print type(logits_test_eval)
+                print logits_test_eval.shape
+                print logits_test_eval.argmax(1)
+                print("test target:")
+                print labels_test_eval
+                test_examples_per_sec = test_cnt / float(test_duration)
+                format_str_test = ('test %s: step %d, loss = %.2f, (%.1f examples/sec; %.3f sec/batch)')
+                print(format_str_test % (datetime.now(), step, total_loss_test_val, test_examples_per_sec, test_duration))
+
+                # Save the model checkpoint periodically.
+                if step % 5000 == 0 or (step + 1) == FLAGS.max_steps:
+                    checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
+                saver.save(sess, checkpoint_path, global_step=step)
 
         coord.request_stop()
         coord.join(threads)
