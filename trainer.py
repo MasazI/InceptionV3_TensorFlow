@@ -24,7 +24,7 @@ def train():
 
         # get trainsets
         print("The number of train images: %d", (dataset.cnt_samples(FLAGS.tfcsv)))
-        images, labels = dataset.csv_inputs(FLAGS.tfcsv, FLAGS.batch_size, distorted=False)
+        images, labels = dataset.csv_inputs(FLAGS.tfcsv, FLAGS.batch_size, distorted=True)
 
         images_debug = datasets.debug(images)
 
