@@ -2,7 +2,7 @@
 InceptionV3_TensorFlow is an implementation of inception v3 using tensorflow and slim according to our guidline.
 
 
-## dependencies ##
+## Dependencies ##
 - TensorFlow (>= 0.8)
 
 
@@ -34,6 +34,6 @@ python trainer.py
 ```
 - change num_classes in settings.py
 
-## Fine Tune ##
+## Fine tune ##
 - change fine_tune in settings.py
 
