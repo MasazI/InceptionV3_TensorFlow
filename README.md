@@ -27,7 +27,7 @@ python trainer.py
 ## How to use your own data sets ##
 - create train_csv.txt and test_csv.txt in data directory.
 
-### datalist format ###  
+### datalist format ###
 
 ```
 <image path>,<label number>  
