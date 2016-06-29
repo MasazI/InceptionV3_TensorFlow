@@ -1,5 +1,6 @@
-# inception_v3 #
-inception_v3 is an implementation of inception v3 using tensorflow according to our guidline.
+# InceptionV3_TensorFlow #
+InceptionV3_TensorFlow is an implementation of inception v3 using tensorflow according to our guidline.
+
 
 ## dependencies ##
 - TensorFlow (>= 0.8)
@@ -10,16 +11,29 @@ inception_v3 is an implementation of inception v3 using tensorflow according to 
 - save checkpoint
 - real time dataaugumentation
 
-## How to use ##
-- create datalist in data directory.
-- datalist  
+
+## Setup ##
+1. download data in data/readme.md
+2. execute "data/create_examples_list.py"
+3. execute "data/relation_tag_to_id.py"
+4. you can see train_csv.txt and test_csv.txt
+
+## Start to train##
+```
+python trainer.py
+```
+
+
+## How to use your own data sets ##
+- create train_csv.txt and test_csv.txt in data directory.
+### datalist format ###  
 
 ```
 <image path>,<label number>  
 ...
 ```
+- change num_classes in settings.py
 
-- train
-```
-python trainer.py
-```
+## Fine Tune ##
+- change fine_tune in settings.py
+
