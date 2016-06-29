@@ -1,5 +1,5 @@
 # InceptionV3_TensorFlow #
-InceptionV3_TensorFlow is an implementation of inception v3 using tensorflow according to our guidline.
+InceptionV3_TensorFlow is an implementation of inception v3 using tensorflow and slim according to our guidline.
 
 
 ## dependencies ##
