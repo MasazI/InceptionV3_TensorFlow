@@ -38,3 +38,7 @@ python trainer.py
 ## Fine tune ##
 - change fine_tune in settings.py
 
+---
+
+Copyright (c) 2016 Masahiro Imai
+Released under the MIT license
