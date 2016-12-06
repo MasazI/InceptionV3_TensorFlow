@@ -11,6 +11,12 @@ InceptionV3_TensorFlow is an implementation of inception v3 using tensorflow and
 - save checkpoint
 - real time dataaugumentation
 
+## Quick start ##
+If you want a quick start to run training of Inception_v3, you can simply do:
+``` bash
+./train.sh
+```
+
 
 ## Setup ##
 1. download data in data/readme.md
@@ -22,7 +28,7 @@ InceptionV3_TensorFlow is an implementation of inception v3 using tensorflow and
 ```
 python trainer.py
 ```
-
+Pass test under Ubuntu15.10 and CentOS
 
 ## How to use your own data sets ##
 - create train_csv.txt and test_csv.txt in data directory.
