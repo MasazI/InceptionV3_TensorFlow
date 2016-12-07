@@ -18,21 +18,20 @@ import numpy as np
 
 def train():
     with tf.Graph().as_default():
-        # globalなstep数
+        # global step number
         global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
         dataset = DataSet()
 
-        # get trainsets
-        print("The number of train images: %d", (dataset.cnt_samples(FLAGS.tfcsv)))
+        # get training set
+        print("The number of training images is: %d" % (dataset.cnt_samples(FLAGS.tfcsv)))
         images, labels = dataset.csv_inputs(FLAGS.tfcsv, FLAGS.batch_size, distorted=True)
 
         images_debug = datasets.debug(images)
 
-        # get testsets
+        # get test set
         #test_cnt = dataset.cnt_samples(FLAGS.testcsv)
         test_cnt = 100
-	#test_cnt = 5
-        print("The number of train images: %d", ())
+
         images_test, labels_test = dataset.test_inputs(FLAGS.testcsv, test_cnt)
 
         images_test_debug = datasets.debug(images_test)
