@@ -48,5 +48,5 @@ Pass test under Ubuntu15.10 and CentOS
 
 ---
 
-Copyright (c) 2016 Masahiro Imai
+Copyright (c) 2016 Masahiro Imai, Yixuan Hu (yeephycho)
 Released under the MIT license
