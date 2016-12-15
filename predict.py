@@ -28,6 +28,7 @@ def train():
         print("The number of training images is: %d" % (dataset.cnt_samples(FLAGS.predictcsv)))
         csv_predict = FLAGS.predictcsv
         lines = dataset.load_csv(csv_predict)
+        lines.sort()
 
         images_ph = tf.placeholder(tf.float32, [1, 229, 229, 3])
 
@@ -35,12 +36,10 @@ def train():
         restore_logits = not FLAGS.fine_tune
 
         # inference
-        logits = model.inference(images_ph, num_classes, for_training=True, restore_logits=restore_logits)
+        logits = model.inference(images_ph, num_classes, for_training=False, restore_logits=restore_logits)
 
 
         # Retain the summaries from the final tower.
-        summaries = tf.get_collection(tf.GraphKeys.SUMMARIES)
-
         batchnorm_updates = tf.get_collection(slim.ops.UPDATE_OPS_COLLECTION)
 
         # saver
@@ -61,27 +60,20 @@ def train():
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
-        if FLAGS.pretrained_model_checkpoint_path:
-            assert tf.gfile.Exists(FLAGS.pretrained_model_checkpoint_path)
-            variables_to_restore = tf.get_collection(
-                slim.variables.VARIABLES_TO_RESTORE)
-            restorer = tf.train.Saver(variables_to_restore)
-            restorer.restore(sess, FLAGS.pretrained_model_checkpoint_path)
-            print('%s: Pre-trained model restored from %s' %
-                  (datetime.now(), FLAGS.pretrained_model_checkpoint_path))
-
-        summary_writer = tf.train.SummaryWriter(
-            FLAGS.train_dir,
-            graph_def=sess.graph.as_graph_def(add_shapes=True))
-
+        ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
+        if ckpt and ckpt.model_checkpoint_path:
+            print("load: checkpoint %s" % (ckpt.model_checkpoint_path))
+            saver.restore(sess, ckpt.model_checkpoint_path)
+        
         print("start to predict.")
         for step, line in enumerate(lines):
             pil_img = Image.open(line[0])
-            pil_img = pil_img.resize((229, 229))
+            pil_img = pil_img.resize((250, 250))
             img_array_r = np.asarray(pil_img)
+            img_array_r = img_array_r[15:244,15:244,:]
             img_array = img_array_r[None, ...]
             softmax_eval = sess.run([logits[2]], feed_dict={images_ph: img_array})
-            print("%s,%d" % (line, softmax_eval))
+            print("%s,%s,%s" % (line[0], line[1], np.argmax(softmax_eval)))
         print("finish to predict.")
         coord.request_stop()
         coord.join(threads)
