@@ -7,6 +7,8 @@ FLAGS = settings.FLAGS
 import numpy as np
 from PIL import Image
 
+import csv
+
 class DataSet:
     def __init__(self):
         pass
@@ -143,6 +145,17 @@ class DataSet:
             pilimg = Image.fromarray(np.uint8(image))
             image_name = "%s/%05d_%s.png" % (output_dir, i, name)
             pilimg.save(image_name)
+
+
+    def load_csv(self, path):
+        print("load csv: %s" % (path))
+        images = []
+        with open(path, 'r') as f:
+            rows = csv.reader(f)
+            for row in rows:
+                print row
+                images.append(row)
+        return images
 
 
 def debug(data):

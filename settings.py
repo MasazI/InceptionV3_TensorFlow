@@ -9,6 +9,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('batch_size', 100, 'the number of images in a batch.')
 flags.DEFINE_string('tfcsv', 'data/train_csv.txt', 'path to tf csv file for training.')
 flags.DEFINE_string('testcsv', 'data/test_csv.txt', 'path to tf csv file for testing.')
+flags.DEFINE_string('predictcsv', 'data/predict_csv.txt', 'path to tf csv file to predict.')
 tf.app.flags.DEFINE_string('train_dir', 'train', "Directory where to write event logs and checkpoint")
 tf.app.flags.DEFINE_integer('num_classes', 101, "Number of classes")
 tf.app.flags.DEFINE_integer('max_steps', 10000000, "Number of batches to run.")
