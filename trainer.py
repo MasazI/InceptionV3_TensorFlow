@@ -123,9 +123,11 @@ def train():
         init = tf.initialize_all_variables()
 
         # session
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
         sess = tf.Session(config=tf.ConfigProto(
             allow_soft_placement=True,
-            log_device_placement=FLAGS.log_device_placement))
+            log_device_placement=FLAGS.log_device_placement,
+            gpu_options=gpu_options))
         sess.run(init)
 
         coord = tf.train.Coordinator()

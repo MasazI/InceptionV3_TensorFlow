@@ -89,7 +89,7 @@ class DataSet:
         print image.get_shape()
 
         # resize to distort
-        dist = tf.image.resize_images(image, FLAGS.scale_h, FLAGS.scale_w)
+        dist = tf.image.resize_images(image, (FLAGS.scale_h, FLAGS.scale_w))
         # random crop
         dist = tf.image.resize_image_with_crop_or_pad(dist, FLAGS.input_h, FLAGS.input_w)
 
@@ -117,7 +117,7 @@ class DataSet:
 
         if distorted:
             # resize to distort
-            dist = tf.image.resize_images(image, FLAGS.scale_h, FLAGS.scale_w)
+            dist = tf.image.resize_images(image, (FLAGS.scale_h, FLAGS.scale_w))
 
             # random crop
             dist = tf.image.resize_image_with_crop_or_pad(dist, FLAGS.input_h, FLAGS.input_w)
