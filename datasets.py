@@ -3,7 +3,7 @@
 import tensorflow as tf
 import settings
 FLAGS = settings.FLAGS
-
+import os
 import numpy as np
 from PIL import Image
 
@@ -60,7 +60,7 @@ class DataSet:
                 min_after_dequeue=min_queue_examples
             )
             # Display the training images in the visualizer
-            tf.image_summary('images', images, max_images=batch_size)
+            tf.summary.image('images', images, max_outputs=batch_size)
         else:
             images, labels = tf.train.batch(
                 [image, label],
@@ -74,7 +74,7 @@ class DataSet:
     def cnt_samples(self, filepath):
         return sum(1 for line in open(filepath))
 
-    def test_inputs(self, csv, batch_size):
+    def test_inputs(self, csv, batch_size, verbose=False):
         print("input csv file path: %s, batch size: %d" % (csv, batch_size))
         filename_queue = tf.train.string_input_producer([csv], shuffle=False)
         reader = tf.TextLineReader()
@@ -85,8 +85,9 @@ class DataSet:
         jpg = tf.read_file(filename)
         image = tf.image.decode_jpeg(jpg, channels=3)
         image = tf.cast(image, tf.float32)
-        print "original image shape:"
-        print image.get_shape()
+        if verbose:
+            print "original image shape:"
+            print image.get_shape()
 
         # resize to distort
         dist = tf.image.resize_images(image, (FLAGS.scale_h, FLAGS.scale_w))
@@ -101,7 +102,7 @@ class DataSet:
         return self._generate_image_and_label_batch(dist, label, min_queue_examples, batch_size, shuffle=False)
 
 
-    def csv_inputs(self, csv, batch_size, distorted=False):
+    def csv_inputs(self, csv, batch_size, distorted=False, verbose=False):
         print("input csv file path: %s, batch size: %d" % (csv, batch_size))
         filename_queue = tf.train.string_input_producer([csv], shuffle=True)
         reader = tf.TextLineReader()
@@ -112,8 +113,9 @@ class DataSet:
         jpg = tf.read_file(filename)
         image = tf.image.decode_jpeg(jpg, channels=3)
         image = tf.cast(image, tf.float32)
-        print "original image shape:"
-        print image.get_shape()
+        if verbose:
+            print "original image shape:"
+            print image.get_shape()
 
         if distorted:
             # resize to distort
@@ -131,8 +133,9 @@ class DataSet:
             # resize to input
             dist = tf.image.resize_images(image, FLAGS.input_h, FLAGS.input_w)
 
-        print "dist image shape:"
-        print dist.get_shape()
+        if verbose:
+            print "dist image shape:"
+            print dist.get_shape()
 
         min_fraction_of_examples_in_queue = 0.4
         min_queue_examples = int(FLAGS.num_examples_per_epoch_for_train * min_fraction_of_examples_in_queue)
@@ -163,7 +166,7 @@ def debug(data):
 
 if __name__ == "__main__":
     dataset = DataSet()
-    images, labels = dataset.csv_inputs(FLAGS.tfcsv, FLAGS.batch_size)
+    images, labels = dataset.csv_inputs(FLAGS.traincsv, FLAGS.batch_size)
 
     images_eval = debug(images)
     labels_eval = debug(labels)

@@ -16,15 +16,15 @@ import train_operation
 import slim.slim
 import numpy as np
 
-def train():
+def train(verbose=False):
     with tf.Graph().as_default():
         # global step number
         global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
         dataset = DataSet()
 
         # get training set
-        print("The number of training images is: %d" % (dataset.cnt_samples(FLAGS.tfcsv)))
-        images, labels = dataset.csv_inputs(FLAGS.tfcsv, FLAGS.batch_size, distorted=True)
+        print("The number of training images is: %d" % (dataset.cnt_samples(FLAGS.traincsv)))
+        images, labels = dataset.csv_inputs(FLAGS.traincsv, FLAGS.batch_size, distorted=True)
 
         images_debug = datasets.debug(images)
 
@@ -65,11 +65,12 @@ def train():
         loss_averages_test = tf.train.ExponentialMovingAverage(0.9, name='avg_test')
         loss_averages_op_test = loss_averages_test.apply(losses_test + [total_loss_test])
 
-        print "="*10
-        print "loss length:"
-        print len(losses)
-        print len(losses_test)
-        print "="*10
+        if verbose:
+            print "="*10
+            print "loss length:"
+            print len(losses)
+            print len(losses_test)
+            print "="*10
 
         # for l in losses + [total_loss]:
         #     # Remove 'tower_[0-9]/' from the name in case this is a multi-GPU training
@@ -84,11 +85,11 @@ def train():
         #
         with tf.control_dependencies([loss_averages_op]):
             total_loss = tf.identity(total_loss)
-        tf.scalar_summary("loss", total_loss)
+        tf.summary.scalar("loss", total_loss)
 
         with tf.control_dependencies([loss_averages_op_test]):
             total_loss_test = tf.identity(total_loss_test)
-        tf.scalar_summary("loss_eval", total_loss_test)
+        tf.summary.scalar("loss_eval", total_loss_test)
 
         # Reuse variables for the next tower.
         #tf.get_variable_scope().reuse_variables()
@@ -113,14 +114,14 @@ def train():
         #    summaries.append(tf.histogram_summary(var.op.name, var))
 
         # saver
-        saver = tf.train.Saver(tf.all_variables())
+        saver = tf.train.Saver(tf.global_variables())
 
         # Build the summary operation from the last tower summaries.
         #summary_op = tf.merge_summary(summaries)
-        summary_op = tf.merge_all_summaries()
+        summary_op = tf.summary.merge(summaries)
 
         # initialization
-        init = tf.initialize_all_variables()
+        init = tf.global_variables_initializer()
 
         # session
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
@@ -133,18 +134,22 @@ def train():
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
-        if FLAGS.pretrained_model_checkpoint_path:
-            assert tf.gfile.Exists(FLAGS.pretrained_model_checkpoint_path)
-            variables_to_restore = tf.get_collection(
-                slim.variables.VARIABLES_TO_RESTORE)
-            restorer = tf.train.Saver(variables_to_restore)
-            restorer.restore(sess, FLAGS.pretrained_model_checkpoint_path)
-            print('%s: Pre-trained model restored from %s' %
-                  (datetime.now(), FLAGS.pretrained_model_checkpoint_path))
+        if FLAGS.fine_tune:
+            ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
+            if ckpt and ckpt.model_checkpoint_path:
+                print('%s: Pre-trained model restored from %s' %
+                      (datetime.now(), ckpt.model_checkpoint_path))
+                saver.restore(sess, ckpt.model_checkpoint_path)
 
-        summary_writer = tf.train.SummaryWriter(
-            FLAGS.train_dir,
-            graph_def=sess.graph.as_graph_def(add_shapes=True))
+            # if FLAGS.pretrained_model_checkpoint_path:
+            #     assert tf.gfile.Exists(FLAGS.pretrained_model_checkpoint_path)
+            #     variables_to_restore = tf.get_collection(
+            #         slim.variables.VARIABLES_TO_RESTORE)
+            #     restorer = tf.train.Saver(variables_to_restore)
+            #     restorer.restore(sess, FLAGS.pretrained_model_checkpoint_path)
+
+
+        summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
 
         for step in xrange(FLAGS.max_steps):
             start_time = time.time()

@@ -30,7 +30,7 @@ def _activation_summaries(endpoints):
     for act in endpoints.values():
       _activation_summary(act)
 
-def inference(images, num_classes, for_training=False, restore_logits=True, scope=None, reuse=False, dropout_keep_prob=0.8):
+def inference(images, num_classes, for_training=False, restore_logits=True, scope=None, reuse=False, dropout_keep_prob=0.8, verbose=False):
     batch_norm_params = {
         # Decay for the moving averages.
         'decay': FLAGS.batchnorm_moving_average_decay,
@@ -61,8 +61,9 @@ def inference(images, num_classes, for_training=False, restore_logits=True, scop
 
     softmax = endpoints['predictions']
 
-    print logits.get_shape()
-    print softmax.get_shape()
+    if verbose:
+        print logits.get_shape()
+        print softmax.get_shape()
 
     # logits: output of final layer, auxliary_logits: output of hidden layer, softmax: predictions
     return logits, auxiliary_logits, softmax
@@ -89,7 +90,7 @@ def loss_regression(logits, targets, batch_size=None):
     # Square loss for the auxiliary regression head.
     slim.losses.square_loss(logits[1], targets, label_smoothing=0.1, weight=1.0, scope='aux_loss')
 
-def loss_test(logits, labels, batch_size=None):
+def loss_test(logits, labels, batch_size=None, verbose=False):
     # Reshape the labels into a dense Tensor of
     # shape [FLAGS.batch_size, num_classes].
     sparse_labels = tf.reshape(labels, [batch_size, 1])
@@ -101,12 +102,13 @@ def loss_test(logits, labels, batch_size=None):
                                     [batch_size, num_classes],
                                     1.0, 0.0)
 
-    print "-"*10
-    print type(logits)
-    print len(logits)
-    print logits[0].get_shape()
-    print logits[1].get_shape()
-    print "-"*10
+    if verbose:
+        print "-"*10
+        print type(logits)
+        print len(logits)
+        print logits[0].get_shape()
+        print logits[1].get_shape()
+        print "-"*10
 
     # Cross entropy loss for the main softmax prediction.
     loss = slim.losses.cross_entropy_loss_without_collection(logits[0],
@@ -124,7 +126,7 @@ def loss_test(logits, labels, batch_size=None):
 
 
 
-def loss(logits, labels, batch_size=None):
+def loss(logits, labels, batch_size=None, verbose=False):
     if not batch_size:
         batch_size = FLAGS.batch_size
 
@@ -139,12 +141,13 @@ def loss(logits, labels, batch_size=None):
                                     [batch_size, num_classes],
                                     1.0, 0.0)
 
-    print "-"*10
-    print type(logits)
-    print len(logits)
-    print logits[0].get_shape()
-    print logits[1].get_shape()
-    print "-"*10
+    if verbose:
+        print "-"*10
+        print type(logits)
+        print len(logits)
+        print logits[0].get_shape()
+        print logits[1].get_shape()
+        print "-"*10
 
     # Cross entropy loss for the main softmax prediction.
     slim.losses.cross_entropy_loss(logits[0],
