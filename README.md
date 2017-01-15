@@ -8,6 +8,7 @@ InceptionV3_TensorFlow is an implementation of inception v3 using tensorflow and
 
 ## Features ##
 - train
+- predict
 - save checkpoint
 - real time data augumentation
 
