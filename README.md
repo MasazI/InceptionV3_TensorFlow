@@ -3,7 +3,7 @@ InceptionV3_TensorFlow is an implementation of inception v3 using tensorflow and
 
 
 ## Dependencies ##
-- TensorFlow (>= 0.8)
+- TensorFlow (>= 0.12)
 
 
 ## Features ##
