@@ -47,6 +47,10 @@ Pass test under Ubuntu15.10 and CentOS
 ### Fine tune ###
 - change fine_tune in settings.py
 
+## TensorBoard ##
+```
+tensorboard --logdir /to/your/path/train_dir --port=6006
+```
 ---
 
 Copyright (c) 2016 Masahiro Imai, Yixuan Hu (yeephycho)
